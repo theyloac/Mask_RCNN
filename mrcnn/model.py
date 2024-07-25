@@ -1,3 +1,4 @@
+
 """
 Mask R-CNN
 The main Mask R-CNN model implementation.
@@ -23,6 +24,14 @@ from tensorflow.python.eager import context
 import tensorflow.keras.models as KM
 
 from mrcnn import utils
+import sys
+from mrcnn.parallel_model import ParallelModel
+
+from tensorflow.compat.v1 import ConfigProto
+from tensorflow.compat.v1 import InteractiveSession
+config = ConfigProto() 
+config.gpu_options.allow_growth = True
+session = InteractiveSession(config=config)
 
 # Requires TensorFlow 2.0+
 from distutils.version import LooseVersion
@@ -1259,6 +1268,7 @@ def load_image_gt(dataset, config, image_id, augmentation=None):
 
         # Store shapes before augmentation to compare
         image_shape = image.shape
+        # print("image_shape is {}".format(image_shape))
         mask_shape = mask.shape
         # Make augmenters deterministic to apply similarly to images and masks
         det = augmentation.to_deterministic()
@@ -2064,7 +2074,6 @@ class MaskRCNN(object):
 
         # Add multi-GPU support.
         if config.GPU_COUNT > 1:
-            from mrcnn.parallel_model import ParallelModel
             model = ParallelModel(model, config.GPU_COUNT)
 
         return model
@@ -2106,6 +2115,11 @@ class MaskRCNN(object):
         """
         import h5py
         from tensorflow.python.keras.saving import hdf5_format
+        # try:
+        #     from keras.engine import saving
+        # except ImportError:
+        #     # Keras before 2.2 used the 'topology' namespace.
+        #     from keras.engine import topology as saving
 
         if exclude:
             by_name = True
@@ -2153,7 +2167,7 @@ class MaskRCNN(object):
         metrics. Then calls the Keras compile() function.
         """
         # Optimizer object
-        optimizer = keras.optimizers.SGD(
+        optimizer = keras.optimizers.legacy.SGD(
             lr=learning_rate, momentum=momentum,
             clipnorm=self.config.GRADIENT_CLIP_NORM)
         # Add Losses
@@ -2363,8 +2377,8 @@ class MaskRCNN(object):
             validation_data=val_generator,
             validation_steps=self.config.VALIDATION_STEPS,
             max_queue_size=100,
-            workers=workers,
-            use_multiprocessing=workers > 1,
+            workers=0,
+            use_multiprocessing=False,
         )
         self.epoch = max(self.epoch, epochs)
 
