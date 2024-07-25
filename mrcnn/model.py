@@ -1873,7 +1873,9 @@ class MaskRCNN():
                 shape=[None, 4], name="input_gt_boxes", dtype=tf.float32)
             # Normalize coordinates
             gt_boxes = KL.Lambda(lambda x: norm_boxes_graph(
-    		tf.cast(x, tf.float32), K.shape(input_image)[1:3]))(input_gt_boxes)
+   		 tf.cast(x, tf.float32), tf.cast(K.shape(input_image)[1:3], tf.float32)), 
+    		output_shape=(None, 4), dtype='float32')(input_gt_boxes)  # Ensuring output shape and type
+
             # 3. GT Masks (zero padded)
             # [batch, height, width, MAX_GT_INSTANCES]
             if config.USE_MINI_MASK:
@@ -1977,7 +1979,9 @@ class MaskRCNN():
                                       name="input_roi", dtype=np.int32)
                 # Normalize coordinates
                 target_rois = KL.Lambda(lambda x: norm_boxes_graph(
-                    x, K.shape(input_image)[1:3]))(input_rois)
+    			tf.cast(x, tf.float32), tf.cast(K.shape(input_image)[1:3], tf.float32)),
+   			 output_shape=(None, 4), dtype='float32')(input_rois)  # Ensuring output shape and type
+
             else:
                 target_rois = rpn_rois
 
