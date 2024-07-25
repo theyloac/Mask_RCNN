@@ -2692,7 +2692,7 @@ class MaskRCNN():
 
         # Build a Keras function to run parts of the computation graph
         inputs = model.inputs
-        if model.uses_learning_phase and not isinstance(K.learning_phase(), int):
+        if not isinstance(K.learning_phase(), int):
             inputs += [K.learning_phase()]
         kf = K.function(model.inputs, list(outputs.values()))
 
@@ -2710,7 +2710,7 @@ class MaskRCNN():
         model_in = [molded_images, image_metas, anchors]
 
         # Run inference
-        if model.uses_learning_phase and not isinstance(K.learning_phase(), int):
+        if not isinstance(K.learning_phase(), int):
             model_in.append(0.)
         outputs_np = kf(model_in)
 
